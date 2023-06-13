@@ -13,34 +13,33 @@ import RPi.GPIO as GPIO
 from sphero_sdk import SpheroRvrObserver
 from aip import AipSpeech
 
-
-APP_ID = '34269426'
-API_KEY = 'VXSiXhkQXGPBW6o59V8zLrAG'
-SECRET_KEY = 'e18pZGAqnGstEysHcYsX0b8OzyeAqZuj'
+APP_ID = '3xxxxxxx'
+API_KEY = 'VxxxxxkxxxxxxxxxxxxxxxAG'
+SECRET_KEY = 'e1xxxxxxxxxxxxxxxxxxxxxxxj'
 client = AipSpeech(APP_ID, API_KEY, SECRET_KEY)
 path = 'voices/myvoices.wav'
 THRESHOLD = 0.3
-FLAG=0
+FLAG = 0
 rvr = SpheroRvrObserver()
 rvr.wake()
 # give RVR time to wake up
 time.sleep(2)
 rvr.reset_yaw()
-GPIO.setmode(GPIO.BOARD)  # BOARD编号方式，基于插座引脚编号
+GPIO.setmode(GPIO.BOARD)  # BOARD encoding
 GPIO.setwarnings(False)
-GPIO.setup(16, GPIO.OUT) # 输出模式#AIN1
-GPIO.setup(18, GPIO.OUT) #AIN2
-GPIO.setup(31, GPIO.OUT) #BIN1
-GPIO.setup(29, GPIO.OUT) #BIN2
+GPIO.setup(16, GPIO.OUT)  # AIN1
+GPIO.setup(18, GPIO.OUT)  # AIN2
+GPIO.setup(31, GPIO.OUT)  # BIN1
+GPIO.setup(29, GPIO.OUT)  # BIN2
 GPIO.setup(35, GPIO.OUT)
 GPIO.setup(37, GPIO.OUT)
-pwm1=GPIO.PWM(35,50)
-pwm2=GPIO.PWM(37,50)
+pwm1 = GPIO.PWM(35, 50)
+pwm2 = GPIO.PWM(37, 50)
 pwm1.start(0)
 pwm2.start(0)
 
 
-# Use SpeechRecognition to record 使用语音识别包录制音频
+# Use SpeechRecognition to record
 def my_record(rate=16000):
     r = sr.Recognizer()
     with sr.Microphone(sample_rate=rate) as source:
@@ -49,9 +48,10 @@ def my_record(rate=16000):
 
     with open("voices/myvoices.wav", "wb") as f:
         f.write(audio.get_wav_data())
-    print("录音完成！")
+    print("Recording done!")
 
-# 将语音转文本STT
+
+# Voice to text
 def listen():
     # 读取录音文件
     with open(path, 'rb') as fp:
@@ -70,69 +70,74 @@ def listen():
         print("KeyError")
 
 
-#挖呀挖
+# Digging
 def dig():
+    GPIO.output(18, GPIO.LOW)  # AIN2=0
 
-   GPIO.output(18, GPIO.LOW)#AIN2=0
+    GPIO.output(16, GPIO.HIGH)  # AIN1=1
 
-   GPIO.output(16, GPIO.HIGH) #AIN1=1
+    return
 
-   return
 
-#转台正转
+# Plate rotating (+)
 def table_forward():
+    GPIO.output(29, GPIO.LOW)  # BIN2=0
 
-   GPIO.output(29, GPIO.LOW) #BIN2=0
+    GPIO.output(31, GPIO.HIGH)  # BIN1=1
 
-   GPIO.output(31, GPIO.HIGH)#BIN1=1
+    return
 
-   return
 
-#转台反转
+# Plate rotating (-)
 def table_backward():
+    GPIO.output(29, GPIO.HIGH)  # BIN2=1
 
-   GPIO.output(29, GPIO.HIGH) #BIN2=1
+    GPIO.output(31, GPIO.LOW)  # BIN1=0
 
-   GPIO.output(31, GPIO.LOW)#BIN1=0
+    return
 
-   return
 
-#挖掘停止
+# Stop digging
 def stop_dig():
+    GPIO.output(16, GPIO.LOW)
 
-   GPIO.output(16, GPIO.LOW)
+    GPIO.output(18, GPIO.LOW)
 
-   GPIO.output(18, GPIO.LOW)
+    return
 
-   return
 
-#转台停止
+# Stop rotating
 def stop_table():
+    GPIO.output(29, GPIO.LOW)
 
-   GPIO.output(29, GPIO.LOW)
+    GPIO.output(31, GPIO.LOW)
 
-   GPIO.output(31, GPIO.LOW)
+    return
 
-   return
 
 def Move(Speed, Heading, Flags):
     rvr.drive_with_heading(
         speed=Speed,  # Valid speed values are 0-255
         heading=Heading,  # Valid heading values are 0-359
-        flags=Flags, #0 for 1 back
-        )
+        flags=Flags,  # 0 for 1 back
+    )
+
 
 def rawMoveForward(speed):
     rvr.raw_motors(1, speed, 1, speed)
 
+
 def rawMoveReverse(speed):
     rvr.raw_motors(2, speed, 2, speed)
+
 
 def rawMoveLeft(speed):
     rvr.raw_motors(2, speed, 1, speed)
 
+
 def rawMoveRight(speed):
     rvr.raw_motors(1, speed, 2, speed)
+
 
 def readchar():
     fd = sys.stdin.fileno()
@@ -143,6 +148,7 @@ def readchar():
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
     return ch
+
 
 def readkey(getchar_fn=None):
     getchar = getchar_fn or readchar
@@ -158,37 +164,39 @@ def readkey(getchar_fn=None):
 
 lock = threading.Lock()
 angle = 0
+
+
 def vehicleControlByKeyboard():
     global angle
     while True:
-        key=readkey()
-        if key=='w':
+        key = readkey()
+        if key == 'w':
             Move(10, angle, 0)
-            #rawMoveForward(35)
-        elif key=='a':
+            # rawMoveForward(35)
+        elif key == 'a':
             lock.acquire()
             angle -= 5
             if angle < 0:
                 angle += 360
             lock.release()
             Move(30, angle, 0)
-        elif key=='s':
+        elif key == 's':
             Move(10, angle, 1)
-            #rawMoveReverse(35)
-        elif key=='d':
+            # rawMoveReverse(35)
+        elif key == 'd':
             lock.acquire()
             angle += 5
             if angle >= 360:
                 angle -= 360
             lock.release()
             Move(30, angle, 0)
-        elif key=='o':
+        elif key == 'o':
             table_forward()
-        elif key=='p':
+        elif key == 'p':
             table_backward()
-        elif key=='l':
+        elif key == 'l':
             stop_table()
-        elif key=='q':
+        elif key == 'q':
             break
 
 
@@ -211,10 +219,10 @@ def controlByVoice():
             speed2 = 10
         if "后" in rec_text:
             Move(speed2, angle, 1)
-            #rawMoveReverse(speed2)
+            # rawMoveReverse(speed2)
         if "前" in rec_text:
             Move(speed2, angle, 0)
-            #rawMoveForward(speed2)
+            # rawMoveForward(speed2)
         if "左" in rec_text:
             lock.acquire()
             angle -= turningAngle
@@ -234,7 +242,10 @@ def controlByVoice():
         if "英文歌" in rec_text:
             os.system("mplayer ~/Music/pop.mp3")
 
+
 cap = cv2.VideoCapture(0)
+
+
 def diggingLoop():
     while True:
         # object detection and digging
@@ -256,11 +267,12 @@ def diggingLoop():
         proportion_green = area_green / frame.size
         if proportion_green >= THRESHOLD:
             print("begin dig")
-            #table_forward()
+            # table_forward()
             dig()
         else:
-            #table_backward()
+            # table_backward()
             stop_dig()
+
 
 t1 = threading.Thread(target=vehicleControlByKeyboard)
 t2 = threading.Thread(target=diggingLoop)
