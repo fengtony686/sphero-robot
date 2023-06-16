@@ -1,6 +1,6 @@
 # README
 
-This project revolves around a Sphero RVR-based robot, utilizing the Sphero SDK and is designed to run on a Raspberry-Pi. 
+This project revolves around a Sphero RVR-based robot, utilizing the [Sphero SDK](https://github.com/sphero-inc/sphero-sdk-raspberrypi-python) and is designed to run on a Raspberry-Pi. 
 The robot is equipped with three primary functionalities:
 
 `diggingLoop`:
